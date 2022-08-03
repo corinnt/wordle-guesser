@@ -12,4 +12,6 @@ This would return all viable guesses containing 't', 'o' at index 1, and 'u' at 
 
 	possible guesses: {'count', 'pouty', 'mount', 'joust', 'south', 'torus', 'tough', 'route', 'youth', 'mouth', 'donut', 'moult', 'court', 'touch', 'doubt'}
 
+Enter 'found' to quit.
+
 Happy wordling!
