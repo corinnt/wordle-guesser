@@ -9,7 +9,7 @@ dict_4 = {}
 dict_list = [dict_0, dict_1, dict_2, dict_3, dict_4]
 answers_set = set()
 
-with open('/Users/corinn/Downloads/valid_words.csv') as csv_file:
+with open('valid_words.csv') as csv_file:
     csv_reader = csv.reader(csv_file)
     line_count = 0
     for row in csv_reader:
@@ -48,9 +48,9 @@ def read_locked_loose(user_input):
         elif arg == "loose:":
             lock_loose = 1
         elif len(arg) > 1 or lock_loose < 0:
-            print("incorrect argument " + str(i))
+            print("incorrect argument")
             continue_flag = False
-        elif lock_loose == 0 and not skip: # going through locked args
+        elif lock_loose == 0 and not skip and arg.isalpha(): # going through locked args
             try:
                 locked[arg] = int(user_input[i + 1])
                 skip = True
