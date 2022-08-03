@@ -6,6 +6,10 @@ Example:
 
 This guess would be entered as:
 
-  locked: o 1 u 2 loose: t
+	locked: o 1 u 2 loose: t
 
-This would return all viable guesses containing 't', 'o' at index 1, and 'u' at index 2.
+This would return all viable guesses containing 't', 'o' at index 1, and 'u' at index 2:
+
+possible guesses: {'count', 'pouty', 'mount', 'joust', 'south', 'torus', 'tough', 'route', 'youth', 'mouth', 'donut', 'moult', 'court', 'touch', 'doubt'}
+
+Happy wordling!
