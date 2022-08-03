@@ -1,6 +1,7 @@
 Generates possible guesses for the wordle!
 
 Example:
+
 ![alt text](example_guess.png?raw=true)
 
 This guess would be entered as:
