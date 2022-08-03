@@ -1,5 +1,4 @@
 import csv
-from re import I
 
 dict_0 = {}
 dict_1 = {}
