@@ -10,6 +10,6 @@ This guess would be entered as:
 
 This would return all viable guesses containing 't', 'o' at index 1, and 'u' at index 2:
 
-possible guesses: {'count', 'pouty', 'mount', 'joust', 'south', 'torus', 'tough', 'route', 'youth', 'mouth', 'donut', 'moult', 'court', 'touch', 'doubt'}
+	possible guesses: {'count', 'pouty', 'mount', 'joust', 'south', 'torus', 'tough', 'route', 'youth', 'mouth', 'donut', 'moult', 'court', 'touch', 'doubt'}
 
 Happy wordling!
