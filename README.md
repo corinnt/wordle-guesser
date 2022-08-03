@@ -1,7 +1,7 @@
 Generates possible guesses for the wordle!
 
 Example:
-![alt text](https://github.com/corinnt/wordle/guesser/blob/main/example_guess.png?raw=true)
+![alt text](https://github.com/corinnt/wordle/guesser/main/example_guess.png?raw=true)
 
 This guess would be entered as:
 
