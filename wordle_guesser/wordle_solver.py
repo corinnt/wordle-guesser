@@ -54,28 +54,31 @@ def read_locked_loose(user_input):
         elif len(arg) > 1 or lock_loose < 0:
             print("incorrect argument " + str(i))
             continue_flag = False
-        elif lock_loose == 0 and not is_index and arg.isalpha(): # going through locked args
+        elif lock_loose == 0 and not is_index and arg.isalpha(): 
+            # going through locked args
             try:
                 locked[arg] = int(user_input[i + 1])
                 is_index = True
             except: 
                 print("index was not an int")
                 continue_flag = False
-        elif lock_loose == 0 and is_index and not arg.isalpha():                    # lock_loose = 1 -> loose letters to follow
+        elif lock_loose == 0 and is_index and not arg.isalpha():                    
             try:
                 indices.remove(int(arg))
                 is_index = False
-            except:         # 'index' was out of range or not a number
+            except:
                 print("'index' was out of range or duplicate @" + str(i) + ", " + arg)
                 continue_flag = False
         elif lock_loose == 1 and arg.isalpha():
             loose[arg] = indices    # loose dict: maps letter to list of poss indices
         else: 
+            # if you're here god help you
             print("incorrect argument (funky one)")
             continue_flag = False
     return locked, loose, continue_flag
 
 def foldl(func, init, seq):
+    '''fold left function bc pyret has ruined me'''
     if not seq:
         return init
     else:
@@ -89,6 +92,7 @@ def find_guesses(locked, loose):
     set_3 = set()
     set_4 = set()
     set_list = [set_0, set_1, set_2, set_3, set_4]
+    
     # populate suggested set of locked letters
     for letter_index in locked.items():
         letter = letter_index[0]
@@ -121,9 +125,9 @@ def find_guesses(locked, loose):
     else: #letter_set is empty
         loose_set = answers_set
 
-    # check intersection between locked and loose suggestions -> viable answers
-    suggestions = locked_set.intersection(loose_set)
-    return suggestions    
+    # check intersection between locked and loose suggestions -> viable guesses
+    guesses = locked_set.intersection(loose_set)
+    return guesses    
 
 if __name__ == "__main__":
     main()
