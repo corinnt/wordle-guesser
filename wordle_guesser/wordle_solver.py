@@ -13,14 +13,16 @@ with open('wordle_guesser/valid_words.csv') as csv_file:
     csv_reader = csv.reader(csv_file)
     line_count = 0
     for row in csv_reader:
-        for word in row:    # figure out a better way of stripping them later
+        for word in row:    
             answers_set.add(word)
             index = 0
             for letter in word:
-                if letter in dict_list[index].keys(): # letter has already been added to this dict
+                if letter in dict_list[index].keys(): 
+                    # letter has already been added to this dict
                     dict_list[index][letter].add(word)
                 else:
-                    dict_list[index][letter] = {word} # add letter to dict for first time
+                    # add letter to dict for first time
+                    dict_list[index][letter] = {word} 
                 index+=1
 
 def main():
@@ -32,11 +34,13 @@ def main():
         user_input = input("guess details> ").lower().split()
 
 def read_locked_loose(user_input):
-    locked = {}
-    loose = {}
+    '''takes in user input, returns dictionaries of locked and loose letters mapped to their possible indices.
+        error catching needs work.'''
+    locked : dict[str, int] = {}
+    loose : dict[str, list[int]] = {}
     indices = [0, 1, 2, 3, 4]
     lock_loose = -1
-    skip = False
+    is_index = False
     continue_flag = True
     for i in range(len(user_input)):
         arg = user_input[i] 
@@ -50,17 +54,17 @@ def read_locked_loose(user_input):
         elif len(arg) > 1 or lock_loose < 0:
             print("incorrect argument " + str(i))
             continue_flag = False
-        elif lock_loose == 0 and not skip and arg.isalpha(): # going through locked args
+        elif lock_loose == 0 and not is_index and arg.isalpha(): # going through locked args
             try:
                 locked[arg] = int(user_input[i + 1])
-                skip = True
+                is_index = True
             except: 
                 print("index was not an int")
                 continue_flag = False
-        elif lock_loose == 0 and skip and not arg.isalpha():                    # lock_loose = 1 -> loose letters to follow
+        elif lock_loose == 0 and is_index and not arg.isalpha():                    # lock_loose = 1 -> loose letters to follow
             try:
                 indices.remove(int(arg))
-                skip = False
+                is_index = False
             except:         # 'index' was out of range or not a number
                 print("'index' was out of range or duplicate @" + str(i) + ", " + arg)
                 continue_flag = False
@@ -78,6 +82,7 @@ def foldl(func, init, seq):
         return foldl(func, func(init, seq[0]), seq[1:])
 
 def find_guesses(locked, loose):
+    '''takes in dicts of locked and loose letters, returns guesses fitting constraints'''
     set_0 = set()
     set_1 = set()
     set_2 = set()
