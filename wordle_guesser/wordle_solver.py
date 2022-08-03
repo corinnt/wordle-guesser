@@ -9,7 +9,7 @@ dict_4 = {}
 dict_list = [dict_0, dict_1, dict_2, dict_3, dict_4]
 answers_set = set()
 
-with open('/Users/corinn/Downloads/valid_words.csv') as csv_file:
+with open('wordle_guesser/valid_words.csv') as csv_file:
     csv_reader = csv.reader(csv_file)
     line_count = 0
     for row in csv_reader:
@@ -50,22 +50,25 @@ def read_locked_loose(user_input):
         elif len(arg) > 1 or lock_loose < 0:
             print("incorrect argument " + str(i))
             continue_flag = False
-        elif lock_loose == 0 and not skip: # going through locked args
+        elif lock_loose == 0 and not skip and arg.isalpha(): # going through locked args
             try:
                 locked[arg] = int(user_input[i + 1])
                 skip = True
             except: 
                 print("index was not an int")
                 continue_flag = False
-        elif lock_loose == 0 and skip:                    # lock_loose = 1 -> loose letters to follow
+        elif lock_loose == 0 and skip and not arg.isalpha():                    # lock_loose = 1 -> loose letters to follow
             try:
                 indices.remove(int(arg))
                 skip = False
             except:         # 'index' was out of range or not a number
-                print("'index' was out of range, duplicate, or not a number @" + str(i) + ", " + arg)
+                print("'index' was out of range or duplicate @" + str(i) + ", " + arg)
                 continue_flag = False
-        else:
+        elif lock_loose == 1 and arg.isalpha():
             loose[arg] = indices    # loose dict: maps letter to list of poss indices
+        else: 
+            print("incorrect argument (funky one)")
+            continue_flag = False
     return locked, loose, continue_flag
 
 def foldl(func, init, seq):
