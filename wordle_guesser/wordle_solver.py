@@ -103,7 +103,7 @@ def find_guesses(locked, loose):
 
     if len(locked_list) > 0:
         locked_set = foldl(lambda x, y: x.intersection(y), locked_list[0], locked_list)
-    else: 
+    else: #locked_list is empty
         locked_set = answers_set
 
     # populate suggested set of loose letters
@@ -122,10 +122,10 @@ def find_guesses(locked, loose):
 
     if len(letter_list) > 0:
         loose_set = foldl(lambda x, y: x.intersection(y), letter_list[0], letter_list)
-    else: #letter_set is empty
+    else: #letter_list is empty
         loose_set = answers_set
 
-    # check intersection between locked and loose suggestions -> viable guesses
+    # intersection between locked and loose suggestions -> viable guesses
     guesses = locked_set.intersection(loose_set)
     return guesses    
 
