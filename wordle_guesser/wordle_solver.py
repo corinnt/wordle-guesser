@@ -112,7 +112,6 @@ def find_guesses(locked, loose):
             set_list[index] = eval("dict_" + str(index))[letter]
             locked_indices.append(index)
     locked_list = [set_list[i] for i in locked_indices]
-    print("locked_list: " + str(locked_list))
 
     if len(locked_list) > 0:
         locked_set = foldl(lambda x, y: x.intersection(y), locked_list[0], locked_list)
