@@ -56,8 +56,11 @@ def read_locked_loose(user_input):
         elif arg == "loose:":
             lock_loose = 1
         # error catching for multicharacter arg or no locked or loose indication
-        elif len(arg) > 1 or lock_loose < 0:
-            print("incorrect argument " + str(i))
+        elif lock_loose < 0:
+            print("missing locked or loose flag")
+            continue_flag = False
+        elif len(arg) > 1:
+            print("argument too long at " + str(i))
             continue_flag = False
         # a locked letter is given
         elif lock_loose == 0 and not is_index and arg.isalpha(): 
