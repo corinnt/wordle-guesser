@@ -5,8 +5,8 @@ dict_1 = {}
 dict_2 = {}
 dict_3 = {}
 dict_4 = {}
-dict_list = [dict_0, dict_1, dict_2, dict_3, dict_4]
-answers_set = set()
+dict_list : list[dict[str, set[str]]] = [dict_0, dict_1, dict_2, dict_3, dict_4]
+answers_set : set[str] = set()
 
 with open('wordle_guesser/valid_words.csv') as csv_file:
     csv_reader = csv.reader(csv_file)
@@ -35,7 +35,9 @@ def main():
 def read_locked_loose(user_input):
     '''takes in user input, returns dictionaries of locked and loose letters mapped to their possible indices.
         error catching needs work.'''
-    locked : dict[str, int] = {}
+    # locked dict: maps letter to list of existing indices
+    locked : dict[str, list[int]] = {}
+    # loose dict: maps letter to list of poss indices
     loose : dict[str, list[int]] = {}
     indices = [0, 1, 2, 3, 4]
     lock_loose = -1
@@ -43,24 +45,32 @@ def read_locked_loose(user_input):
     continue_flag = True
     for i in range(len(user_input)):
         arg = user_input[i] 
+        # end program
         if arg == "found":
             print("Congrats!")
             continue_flag = False
+        # parsing locked args
         elif arg == "locked:":
             lock_loose = 0
+        # parsing loose args
         elif arg == "loose:":
             lock_loose = 1
+        # error catching for multicharacter arg or no locked or loose indication
         elif len(arg) > 1 or lock_loose < 0:
             print("incorrect argument " + str(i))
             continue_flag = False
+        # a locked letter is given
         elif lock_loose == 0 and not is_index and arg.isalpha(): 
-            # going through locked args
             try:
-                locked[arg] = int(user_input[i + 1])
+                if arg in locked.keys(): # double letter - already has an index list going
+                    locked[arg].append(int(user_input[i + 1]))
+                else:                    # first instance - make a new index list
+                    locked[arg] = [int(user_input[i + 1])]
                 is_index = True
-            except: 
+            except:
                 print("index was not an int")
-                continue_flag = False
+                continue_flag = False             
+        # a locked index is given
         elif lock_loose == 0 and is_index and not arg.isalpha():                    
             try:
                 indices.remove(int(arg))
@@ -68,10 +78,11 @@ def read_locked_loose(user_input):
             except:
                 print("'index' was out of range or duplicate @" + str(i) + ", " + arg)
                 continue_flag = False
+        # a loose letter is given
         elif lock_loose == 1 and arg.isalpha():
-            loose[arg] = indices    # loose dict: maps letter to list of poss indices
+            loose[arg] = indices    
+        # if you're here god help you
         else: 
-            # if you're here god help you
             print("incorrect argument (funky one)")
             continue_flag = False
     return locked, loose, continue_flag
@@ -91,14 +102,17 @@ def find_guesses(locked, loose):
     set_3 = set()
     set_4 = set()
     set_list = [set_0, set_1, set_2, set_3, set_4]
-    
+    locked_indices = []
     # populate suggested set of locked letters
-    for letter_index in locked.items():
-        letter = letter_index[0]
-        index = letter_index[1]
-        set_list[index] = eval("dict_" + str(index))[letter]
-    locked_indices = list(locked.values())
+    for letter_ilist in locked.items():
+        # locked : dict{letters -> [indices]}
+        letter = letter_ilist[0]
+        ilist = letter_ilist[1]
+        for index in ilist:
+            set_list[index] = eval("dict_" + str(index))[letter]
+            locked_indices.append(index)
     locked_list = [set_list[i] for i in locked_indices]
+    print("locked_list: " + str(locked_list))
 
     if len(locked_list) > 0:
         locked_set = foldl(lambda x, y: x.intersection(y), locked_list[0], locked_list)
