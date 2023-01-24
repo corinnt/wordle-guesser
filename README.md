@@ -8,7 +8,7 @@ This guess would be entered as:
 
 	locked: o 1 u 2 loose: t
 
-This would return all viable guesses containing 't', 'o' at index 1, and 'u' at index 2:
+This would return all viable guesses containing 'o' at index 1, a 'u' at index 2, and a 't' at any other available spot:
 
 	possible guesses: {'count', 'pouty', 'mount', 'joust', 'south', 'torus', 'tough', 'route', 'youth', 'mouth', 'donut', 'moult', 'court', 'touch', 'doubt'}
 
