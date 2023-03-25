@@ -1,72 +1,7 @@
 import csv
 from re import I
 
-dict_0 = {}
-dict_1 = {}
-dict_2 = {}
-dict_3 = {}
-dict_4 = {}
-dict_list = [dict_0, dict_1, dict_2, dict_3, dict_4]
-answers_set = set()
-
-with open('valid_words.csv') as csv_file:
-    csv_reader = csv.reader(csv_file)
-    line_count = 0
-    for row in csv_reader:
-        for word in row:    # figure out a better way of stripping them later
-            answers_set.add(word)
-            index = 0
-            for letter in word:
-                if letter in dict_list[index].keys(): # letter has already been added to this dict
-                    dict_list[index][letter].add(word)
-                else:
-                    dict_list[index][letter] = {word} # add letter to dict for first time
-                index+=1
-
-def main():
-    user_input = input("guess details> ").lower().split()
-    while user_input != "found":
-        locked_dict, loose_dict, continue_flag = read_locked_loose(user_input)
-        if continue_flag:
-            print("possible guesses: " + str(find_guesses(locked_dict, loose_dict)))
-        user_input = input("guess details> ").lower().split()
-
-def read_locked_loose(user_input):
-    locked = {}
-    loose = {}
-    indices = [0, 1, 2, 3, 4]
-    lock_loose = -1
-    skip = False
-    continue_flag = True
-    for i in range(len(user_input)):
-        arg = user_input[i] 
-        if arg == "found":
-            print("Congrats!")
-            continue_flag = False
-        elif arg == "locked:":
-            lock_loose = 0
-        elif arg == "loose:":
-            lock_loose = 1
-        elif len(arg) > 1 or lock_loose < 0:
-            print("incorrect argument")
-            continue_flag = False
-        elif lock_loose == 0 and not skip and arg.isalpha(): # going through locked args
-            try:
-                locked[arg] = int(user_input[i + 1])
-                skip = True
-            except: 
-                print("index was not an int")
-                continue_flag = False
-        elif lock_loose == 0 and skip:                    # lock_loose = 1 -> loose letters to follow
-            try:
-                indices.remove(int(arg))
-                skip = False
-            except:         # 'index' was out of range or not a number
-                print("'index' was out of range, duplicate, or not a number @" + str(i) + ", " + arg)
-                continue_flag = False
-        else:
-            loose[arg] = indices    # loose dict: maps letter to list of poss indices
-    return locked, loose, continue_flag
+WORD_LEN = 5
 
 def foldl(func, init, seq):
     if not seq:
@@ -74,42 +9,92 @@ def foldl(func, init, seq):
     else:
         return foldl(func, func(init, seq[0]), seq[1:])
 
-def find_guesses(locked, loose):
-    set_0 = set()
-    set_1 = set()
-    set_2 = set()
-    set_3 = set()
-    set_4 = set()
-    set_list = [set_0, set_1, set_2, set_3, set_4]
-    # populate suggested set of locked letters
-    for letter_index in locked.items():
-        letter = letter_index[0]
-        index = letter_index[1]
-        set_list[index] = eval("dict_" + str(index))[letter]
-    locked_indices = list(locked.values())
-    locked_list = [set_list[i] for i in locked_indices]
+def main(index_to_words_dicts, answers_set):
+    # list of WORD_LEN dictionaries mapping letters to a list of words 
+    # w/ the key letter at this index
+    populate_index_to_words_dicts(index_to_words_dicts, answers_set)
+    user_input = input("guess details> ").lower().split()
+    while user_input != "found":
+        locked_dict, loose_dict, continue_flag = read_locked_loose(user_input)
+        if continue_flag:
+            guess_set = find_guesses(locked_dict, loose_dict, index_to_words_dicts, answers_set)
+            print("possible guesses: " + str(guess_set))
+        user_input = input("guess details > ").lower().split()
 
+def populate_index_to_words_dicts(index_to_word_list_dicts, answers_set):
+    with open('valid_words.csv') as csv_file:
+        csv_reader = csv.reader(csv_file)
+        for row in csv_reader:
+            for word in row:    # figure out a better way of stripping them later
+                answers_set.add(word)
+                index = 0
+                for letter in word:
+                    if letter in index_to_word_list_dicts[index].keys(): 
+                        index_to_word_list_dicts[index][letter].add(word) # letter has already been added to this dict
+                    else:
+                        index_to_word_list_dicts[index][letter] = {word} # add letter to dict for first time
+                    index+=1
+
+def read_locked_loose(user_input):
+    locked_dict = {} 
+    loose_dict = {}
+    remaining_indices = range(WORD_LEN)
+    #control flags
+    lock_loose = -1 #initialize as -1 to be neither locked mode nor loose mode
+    prev_is_alpha = False 
+    continue_flag = True
+    for i in range(len(user_input)):
+        arg = user_input[i] 
+        if arg == "found":
+            print("Congrats!")
+            continue_flag = False
+        # begin locked / green args
+        elif arg == "-g":
+            lock_loose = 0
+        # begin loose / yellow args
+        elif arg == "-y": 
+            lock_loose = 1
+
+        elif len(arg) > 1 or lock_loose < 0:
+            print("incorrect argument")
+            continue_flag = False
+        # parsing locked args
+        elif lock_loose == 0 and arg.isalpha() and not prev_is_alpha: 
+            try:
+                arg_as_int = int(user_input[i + 1])
+                prev_is_alpha = True
+            except: 
+                print("index was not an integer")
+                continue_flag = False
+            if arg in locked_dict.items():
+                locked_dict[arg] = locked_dict[arg].append(arg_as_int)
+            else:
+                locked_dict[arg] = [arg_as_int]
+        # lock_loose = 1 -> loose letters to follow
+        elif lock_loose == 0 and prev_is_alpha:  
+            try:
+                remaining_indices.remove(int(arg))
+                prev_is_alpha = False
+            except:   # 'index' couldn't be removed, was out of range or not a number
+                print("'index' was out of range, duplicate, or not a number @" + str(i) + ", " + arg)
+                continue_flag = False
+
+        else:
+            loose_dict[arg] = remaining_indices # loose dict: maps letter to list of poss indices
+
+    return locked_dict, loose_dict, continue_flag
+
+def find_guesses(locked_dict, loose_dict, index_to_words_dicts, answers_set):
+    # populate suggested set of locked letters
+    locked_list = list_from_locked_letters(locked_dict, index_to_words_dicts)
     if len(locked_list) > 0:
         locked_set = foldl(lambda x, y: x.intersection(y), locked_list[0], locked_list)
     else: 
         locked_set = answers_set
 
-    # populate suggested set of loose letters
-    letter_list = []
-    # loose : dict{letters -> [indices]}
-    for letter_ilist in loose.items():
-        letter = letter_ilist[0]
-        ilist = letter_ilist[1]
-        letter_list.append(set())
-        for index in ilist:
-            i = len(letter_list) - 1
-            try:
-                letter_list[i] = letter_list[i].union(eval("dict_" + str(index))[letter])
-            except:
-                print("dictionary skipped at letter " + str(letter) + ", index " + str(index))
-
-    if len(letter_list) > 0:
-        loose_set = foldl(lambda x, y: x.intersection(y), letter_list[0], letter_list)
+    loose_list = list_from_loose_letters(loose_dict, index_to_words_dicts)
+    if len(loose_list) > 0:
+        loose_set = foldl(lambda x, y: x.intersection(y), loose_list[0], loose_list)
     else: #letter_set is empty
         loose_set = answers_set
 
@@ -117,5 +102,37 @@ def find_guesses(locked, loose):
     suggestions = locked_set.intersection(loose_set)
     return suggestions    
 
+def list_from_locked_letters(locked_dict, index_to_words_dicts):
+    index_to_words_sets = [set() for i in range(WORD_LEN)]
+    locked_list = []
+    for letter_to_indices in locked_dict.items():
+        letter = letter_to_indices[0]
+        indices = letter_to_indices[1]
+        locked_list.append(set())
+        for index, i in enumerate(indices):
+            # todo: FIX PER INDEX / DUPLICATE FUNCTIONALITY
+            dict_at_index = index_to_words_dicts[index]
+            index_to_words_sets[index] = dict_at_index[letter]
+    locked_indices = list(locked_dict.values())
+    locked_list = [index_to_words_sets[i] for i in locked_indices]
+    return locked_list
+
+def list_from_loose_letters(loose_dict, index_to_words_dicts):
+    # populate suggested set of loose letters
+    loose_list = []
+    # loose : dict{letters -> [indices]}
+    for letter_to_indices in loose_dict.items():
+        letter = letter_to_indices[0]
+        indices = letter_to_indices[1]
+        loose_list.append(set())
+        for index, i in enumerate(indices):
+            try:
+                loose_list[i] = loose_list[i].union(eval("dict_" + str(index))[letter])
+            except:
+                print("dictionary skipped at letter " + str(letter) + ", index " + str(index))
+    return loose_list
+
 if __name__ == "__main__":
-    main()
+    index_dicts = [{} for i in range(WORD_LEN)] 
+    empty_answer_set = set()
+    main(index_dicts, empty_answer_set)
