@@ -1,3 +1,4 @@
+import csv
 import pickle
 from wordle_solver import WORD_LEN
 
