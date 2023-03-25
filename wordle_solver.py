@@ -1,5 +1,6 @@
 import csv
 from re import I
+import pickle
 
 WORD_LEN = 5
 
@@ -9,10 +10,10 @@ def foldl(func, init, seq):
     else:
         return foldl(func, func(init, seq[0]), seq[1:])
 
-def main(letter_to_words_dicts, answers_set):
+def main():
     # list of WORD_LEN dictionaries mapping letters to a list of words 
     # w/ the key letter at this index
-    populate_letter_to_words_dicts(letter_to_words_dicts, answers_set)
+    letter_to_words_dicts, answers_set = unpickle_files()
     user_input = input("guess details> ").lower().split()
     continue_guessing_flag = True
     while continue_guessing_flag:
@@ -22,25 +23,14 @@ def main(letter_to_words_dicts, answers_set):
             print("possible guesses: " + str(guess_set))
             user_input = input("guess details > ").lower().split()
 
-
-def populate_letter_to_words_dicts(letter_to_words_dicts, answers_set):
-    """ Populates letter_to_word_dicts, adds all words to answers_set, no return.
-    :param letter_to_words_dicts : list[dict{letter -> {words}}] 
-    A dictionary mapping a letter to the set of words which have that letter at this index.
-    :param answers_set : set{words} 
-    Set of all possible wordle answers.
+def unpickle_files():
     """
-    with open('valid_words.csv') as csv_file:
-        csv_reader = csv.reader(csv_file)
-        for row in csv_reader:
-            for word in row:    # figure out a better way of stripping them later
-                answers_set.add(word)
-                for index, letter in zip(range(len(word)), word):
-                    #print("letter: " + str(letter))
-                    if letter in letter_to_words_dicts[index].keys(): 
-                        letter_to_words_dicts[index][letter].add(word) # letter has already been added to this dict
-                    else:
-                        letter_to_words_dicts[index][letter] = {word} # add letter to dict for first time
+    """
+    dict_pickle = open ("pickled_dict", "rb")
+    letter_to_words_dicts = pickle.load(dict_pickle)
+    answers_pickle = open("pickled_all_words", "rb")
+    answers_set = pickle.load(answers_pickle)
+    return letter_to_words_dicts, answers_set
 
 def parse_input(user_input): 
     """ Takes in list of user input args, returns populated locked_dict and loose_dict, continue_flag
@@ -184,6 +174,4 @@ def list_from_loose_letters(loose_dict, letter_to_words_dicts):
 
 
 if __name__ == "__main__":
-    index_dicts = [{} for i in range(WORD_LEN)] 
-    empty_answer_set = set()
-    main(index_dicts, empty_answer_set)
+    main()
