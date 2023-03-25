@@ -102,7 +102,7 @@ def find_guesses(locked_dict, loose_dict, index_to_words_dicts, answers_set):
     suggestions = locked_set.intersection(loose_set)
     return suggestions    
 
-def list_from_locked_letters(locked_dict, index_to_words_dicts):
+def list_from_locked_letters(locked_dict, letter_to_words_dicts):
     index_to_words_sets = [set() for i in range(WORD_LEN)]
     locked_list = []
     for letter_to_indices in locked_dict.items():
@@ -111,7 +111,7 @@ def list_from_locked_letters(locked_dict, index_to_words_dicts):
         locked_list.append(set())
         for index, i in enumerate(indices):
             # todo: FIX PER INDEX / DUPLICATE FUNCTIONALITY
-            dict_at_index = index_to_words_dicts[index]
+            dict_at_index = letter_to_words_dicts[index]
             index_to_words_sets[index] = dict_at_index[letter]
     locked_indices = list(locked_dict.values())
     locked_list = [index_to_words_sets[i] for i in locked_indices]
@@ -122,12 +122,13 @@ def list_from_loose_letters(loose_dict, index_to_words_dicts):
     loose_list = []
     # loose : dict{letters -> [indices]}
     for letter_to_indices in loose_dict.items():
-        letter = letter_to_indices[0]
-        indices = letter_to_indices[1]
+        letter : str = letter_to_indices[0]
+        indices : list[int] = letter_to_indices[1]
         loose_list.append(set())
         for index, i in enumerate(indices):
             try:
-                loose_list[i] = loose_list[i].union(eval("dict_" + str(index))[letter])
+                dict_at_index = index_to_words_dicts[index]
+                loose_list[i] = loose_list[i].union(dict_at_index[letter])
             except:
                 print("dictionary skipped at letter " + str(letter) + ", index " + str(index))
     return loose_list
