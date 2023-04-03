@@ -15,7 +15,7 @@ def populate_letter_to_words_dicts(letter_to_words_dicts, answers_set):
     :param answers_set : set{words} 
     Set of all possible wordle answers.
     """
-    with open('valid_words.csv') as csv_file:
+    with open('data/valid_words.csv') as csv_file:
         csv_reader = csv.reader(csv_file)
         for row in csv_reader:
             for word in row:    # figure out a better way of stripping them later
@@ -28,14 +28,16 @@ def populate_letter_to_words_dicts(letter_to_words_dicts, answers_set):
                         letter_to_words_dicts[index][letter] = {word} # add letter to dict for first time
 
 def pickle_data(index_dicts, answer_set):
+    """ Takes in preprocessed dictionary and set of all answers.
+        Writes pickled files to pickled_dict + pickled_all_words. 
     """
-    """
-    dict_pickle = open ("pickled_dict", "wb")
-    pickle.dump(index_dicts, dict_pickle)
-    answer_pickle = open ("pickled_all_words", "wb")
-    pickle.dump(answer_set, answer_pickle)
+    dict_filepath = "data/pickled_dict"
+    answers_filepath = "data/pickled_all_words"
 
+    dict_pickle = open (dict_filepath, "wb")
+    pickle.dump(index_dicts, dict_pickle)
+    answer_pickle = open (answers_filepath, "wb")
+    pickle.dump(answer_set, answer_pickle)
 
 if __name__ == "__main__":
     main()
-

@@ -3,17 +3,9 @@ import pickle
 
 WORD_LEN = 5
 
-def foldl(func, init, seq):
-    if not seq:
-        return init
-    else:
-        return foldl(func, func(init, seq[0]), seq[1:])
-
 def main():
-    # list of WORD_LEN dictionaries mapping letters to a list of words 
-    # w/ the key letter at this index
-    letter_to_words_dicts, answers_set = unpickle_files()
-    user_input = input("guess details> ").lower().split()
+    letter_to_words_dicts, answers_set = unpickle_files("data/pickled_dict", "data/pickled_all_words")
+    user_input = input("guess details > ").lower().split()
     continue_guessing_flag = True
     while continue_guessing_flag:
         locked_dict, loose_dict, continue_guessing_flag = parse_input(user_input)
@@ -22,21 +14,22 @@ def main():
             print("possible guesses: " + str(guess_set))
             user_input = input("guess details > ").lower().split()
 
-def unpickle_files():
+def unpickle_files(dict_path, answers_path):
+    """ Takes in filepaths of pickled list of 5 dictionaries and set of answers.
+        Returns the unpickled letter_to_words_dicts and set of all answers.
     """
-    """
-    dict_pickle = open ("pickled_dict", "rb")
+    dict_pickle = open (dict_path, "rb")
     letter_to_words_dicts = pickle.load(dict_pickle)
-    answers_pickle = open("pickled_all_words", "rb")
+    answers_pickle = open(answers_path, "rb")
     answers_set = pickle.load(answers_pickle)
     return letter_to_words_dicts, answers_set
 
 def parse_input(user_input): 
-    """ Takes in list of user input args, returns populated locked_dict and loose_dict, continue_flag
-    :param user_input : list[str] from user input
-    :return locked_dict : dict[letter -> [indices]] - locked in/green letter mapped to the indices at which it occurs
-    :return loose_dict : dict[letter -> [indices]] - loose/yellow letter mapped to the indices at which it may occur
-    :return continue_flag : Boolean - True when input was properly formatted and which main() should generate guesses
+    """ Takes in list of user input args, returns populated locked_dict and loose_dict + continue_flag.
+    :param user_input : list[str] - list of user arguments
+    :return locked_dict : dict[letter -> [indices]] - maps locked/green letters to the indices at which they occur
+    :return loose_dict : dict[letter -> [indices]] - maps loose/yellow letters to the indices at which they may occur
+    :return continue_flag : Boolean - True when input was properly formatted and main() should generate guesses
     """
     locked_dict = {} 
     loose_dict = {}
@@ -59,16 +52,17 @@ def parse_input(user_input):
         if status == "locked" or status == "loose":
             dict_to_fill = eval(status + "_dict")
             i = parse_guess_details(dict_to_fill, user_input, i, status)
-            if (i < 0): 
-                return exit
+            if (i < 0): return exit
         else:
-            print("Incorrect usage. Correct usage: -g <letter> <position> -y <letter> <position> <position>")
+            print("Incorrect usage. Correct usage: -g <letter> <position> ... <position -y <letter> <position> ... <position>")
             return exit 
     return locked_dict, loose_dict, True
 
 def parse_guess_details(to_fill_dict, user_input, prev_index, status):
-    """ Takes in locked or loose dictionary to fill, user input, 
-        latest index parsed in user_input, "locked" or "loose" status
+    """ Takes in dictionary to populate w/ parsed input, user input, 
+        latest index parsed in user_input, "locked" or "loose" status,
+        returns next unparsed input index or if error, -1.
+
     """
     letter = "0"
     exit = -1
@@ -104,18 +98,24 @@ def parse_guess_details(to_fill_dict, user_input, prev_index, status):
                 try:
                     letter_valid_indices.remove(index_of_letter) #input indices are bad -> remove from valid
                 except:
-                    print("index of letter " + index_of_letter + " not found in letter_valid_indices")
+                    print("Index of letter " + index_of_letter + " not found in letter_valid_indices")
         else:
             print("Error in parsing " + status + " arguments.")
             return exit
     to_fill_dict[letter] = letter_valid_indices
-    return len(user_input) # possbug: need to return len(user_input) - 1 ?
+    return len(user_input)
+
+def foldl(func, init, seq):
+    if not seq:
+        return init
+    else:
+        return foldl(func, func(init, seq[0]), seq[1:])
 
 def generate_guesses(locked_dict, loose_dict, letter_to_words_dicts, answers_set):
     """ Populate suggested set of words which meet locked and loose specifications
-    :param locked_dict : 
-    :param loose_dict : 
-    :param letter_to_words_dicts : list[dict[letter -> set(words)]]
+    :param locked_dict : dict[letter -> list[indices]] - maps locked/green letters to indices those letters occur
+    :param loose_dict :  dict[letter -> list[indices]] - maps loose/yellow letters to indices those letters may occur
+    :param letter_to_words_dicts : list[dict[letter -> set(words)]] - list of dictionaries 
     :param answers_set : set(words) - all possible words
     :return suggestions : set(words) - set of words which are viable guesses
     """
@@ -127,17 +127,16 @@ def generate_guesses(locked_dict, loose_dict, letter_to_words_dicts, answers_set
 
     loose_list = list_from_loose_letters(loose_dict, letter_to_words_dicts)
     if len(loose_list) > 0:
-        loose_set = foldl(lambda x, y: x.union(y), loose_list[0], loose_list)
-    else: #letter_set is empty
-        loose_set = answers_set
-
+        loose_set = foldl(lambda x, y: x.intersection(y), loose_list[0], loose_list)
+    else: loose_set = answers_set
     # check intersection between locked and loose suggestions -> viable answers
     suggestions = locked_set.intersection(loose_set)
+
     return suggestions    
 
 
 def list_from_locked_letters(locked_dict, letter_to_words_dicts):
-    """ Generates a list of sets of words which have the appropriate letter at their indices for each locked index
+    """ Generates a list of sets of words which have the appropriate letter at their indices for each locked/green index
     :param locked_dict : dict[letter -> list[indices]]
     :param letter_to_words_dicts : list[dict[letter -> set(words)]]
     :return locked_list : list[set(words)] set for each locked index; each set corresponds to all words st the locked letter is at that index
@@ -149,28 +148,28 @@ def list_from_locked_letters(locked_dict, letter_to_words_dicts):
                 letter_to_words_dict = letter_to_words_dicts[index] 
                 locked_list.append(letter_to_words_dict[letter])
             except: 
-                print("dictionary skipped at letter " + str(letter) + ", index " + str(index))
+                print("Dictionary skipped at letter " + str(letter) + ", index " + str(index))
     return locked_list
 
 def list_from_loose_letters(loose_dict, letter_to_words_dicts):
     """ Generates list of sets of words which have the key letter at their index 
     :param loose_dict : dict[letter -> list[indices]]
     :param letter_to_words_dicts : list[dict[letter -> set(words)]]
-    :return locked_list : list[set(words)] set for each loose index; each set corresponds to all words st  loose letter c at that index
+    :return loose_list : list[set(words)] set of words for each loose letter which has the letter at a viable index
     """
     loose_list = []
-    # loose_dict : dict{letters -> [indices]}
-    for letter, indices in loose_dict.items():
-        for meta_i, index in enumerate(indices):
-            loose_list.append(set())
+    for letter, indices in loose_dict.items(): 
+        compiled_letter_set = set()
+        for index in indices:
+            invalid_indices = [i for i in list(range(WORD_LEN)) if i not in indices]
             try:
-                letter_to_words_dict = letter_to_words_dicts[index]
-                new_set_for_index = loose_list[meta_i].union(letter_to_words_dict[letter])
-                loose_list.append(new_set_for_index)
-            except:
-                print("dictionary skipped at letter " + str(letter) + ", index " + str(index))
+                compiled_letter_set = compiled_letter_set.union(letter_to_words_dicts[index][letter])
+                compiled_letter_set = foldl(lambda base_set, i: \
+                                        base_set.difference(letter_to_words_dicts[i][letter]),\
+                                        compiled_letter_set, invalid_indices)
+            except: "Dictionary skipped, but should be fine."
+        loose_list.append(compiled_letter_set)
     return loose_list
-
 
 if __name__ == "__main__":
     main()
