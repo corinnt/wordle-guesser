@@ -1,18 +1,28 @@
 from re import I
 import pickle
+import argparse
 
 WORD_LEN = 5
 
 def main():
     letter_to_words_dicts, answers_set = unpickle_files("data/pickled_dict", "data/pickled_all_words")
     user_input = input("guess details > ").lower().split()
-    continue_guessing_flag = True
-    while continue_guessing_flag:
-        locked_dict, loose_dict, continue_guessing_flag = parse_input(user_input)
-        if continue_guessing_flag:
-            guess_set = generate_guesses(locked_dict, loose_dict, letter_to_words_dicts, answers_set)
-            print("possible guesses: " + str(guess_set))
-            user_input = input("guess details > ").lower().split()
+    args = parseArguments(user_input)
+    while not args.found:
+        locked_dict = parse_guess_details(args.locked)
+        loose_dict = parse_guess_details(args.loose)
+        guess_set = generate_guesses(locked_dict, loose_dict, letter_to_words_dicts, answers_set)
+        print("possible guesses: " + str(guess_set))
+        user_input = input("guess details > ").lower().split()
+        args = parseArguments(user_input)
+
+def parseArguments(input):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-g", "--locked", nargs='+', help="")
+    parser.add_argument("-y", "--loose",  nargs='+', help="")
+    parser.add_argument("-f", "--found",  default=None, help="") 
+    args = parser.parse_args(input)
+    return args
 
 def unpickle_files(dict_path, answers_path):
     """ Takes in filepaths of pickled list of 5 dictionaries and set of answers.
@@ -24,86 +34,51 @@ def unpickle_files(dict_path, answers_path):
     answers_set = pickle.load(answers_pickle)
     return letter_to_words_dicts, answers_set
 
-def parse_input(user_input): 
-    """ Takes in list of user input args, returns populated locked_dict and loose_dict + continue_flag.
-    :param user_input : list[str] - list of user arguments
-    :return locked_dict : dict[letter -> [indices]] - maps locked/green letters to the indices at which they occur
-    :return loose_dict : dict[letter -> [indices]] - maps loose/yellow letters to the indices at which they may occur
-    :return continue_flag : Boolean - True when input was properly formatted and main() should generate guesses
-    """
-    locked_dict = {} 
-    loose_dict = {}
-    exit = ({}, {}, False)
-    i = 0
-    status = ""
-    while (i < len(user_input)):
-        arg = user_input[i] 
-        if arg == "found":
-            print("Congrats!")
-            i = len(user_input)
-            return exit
-        # begin locked / green args
-        elif arg == "-g":
-            status = "locked"
-        # begin loose / yellow args
-        elif arg == "-y":
-            status = "loose"
-        # check that a flag was passed
-        if status == "locked" or status == "loose":
-            dict_to_fill = eval(status + "_dict")
-            i = parse_guess_details(dict_to_fill, user_input, i, status)
-            if (i < 0): return exit
-        else:
-            print("Incorrect usage. Correct usage: -g <letter> <position> ... <position -y <letter> <position> ... <position>")
-            return exit 
-    return locked_dict, loose_dict, True
-
-def parse_guess_details(to_fill_dict, user_input, prev_index, status):
+def parse_guess_details(input_list):
     """ Takes in dictionary to populate w/ parsed input, user input, 
         latest index parsed in user_input, "locked" or "loose" status,
         returns next unparsed input index or if error, -1.
-
     """
-    letter = "0"
-    exit = -1
-    if (status == "locked"):
-        valid_indices = []
-    else: 
-        valid_indices = list(range(WORD_LEN))
-    letter_valid_indices = []
-    for i in range(prev_index + 1, len(user_input)):
-        arg = user_input[i]
-        if arg == "-y" or arg == "-g":
-            to_fill_dict[letter] = letter_valid_indices
-            return i
-        elif arg.isalpha() and letter == "0": # this isn't the first letter -> record valid valid letters
-            letter = arg
-            letter_valid_indices = valid_indices.copy()
-        elif arg.isalpha() and letter != "0": # any # letter is found, so set up 
-            to_fill_dict[letter] = letter_valid_indices
-            letter = arg 
-            letter_valid_indices = valid_indices.copy()
-        elif not arg.isalpha() and letter != "0":
-            try:
-                index_of_letter = int(user_input[i]) - 1
-            except: 
-                print("Index was not an integer or improperly entered.")
-                return exit
-            if index_of_letter < 0:
-                print("Input position of letter must be between 1 and " + str(WORD_LEN) + ".")
-                return exit
-            if status == "locked":
-                letter_valid_indices.append(index_of_letter) #input indices are good -> add to valid
-            else:
-                try:
-                    letter_valid_indices.remove(index_of_letter) #input indices are bad -> remove from valid
-                except:
-                    print("Index of letter " + index_of_letter + " not found in letter_valid_indices")
-        else:
-            print("Error in parsing " + status + " arguments.")
-            return exit
-    to_fill_dict[letter] = letter_valid_indices
-    return len(user_input)
+    new_dict = {}
+    for char in input_list:
+        if not char.isnumeric() and not char.isalpha():
+            raise Exception("All arguments must be letters or numbers.")
+    
+    if len(input_list) < 2:
+        raise Exception("Must enter at least one letter and index after flag.")
+
+    i = 0
+    while i < len(input_list):
+        parse_letter(i, input_list, new_dict)
+
+    return new_dict
+
+def parse_letter(i, input_list, new_dict):
+    if input_list[i].isalpha():
+        letter = input_list[i]
+        new_dict[letter] = []
+        i += 1
+    else:
+        raise Exception("First character after flag wasn't a letter")
+
+    arg = input_list[i]
+    if not arg.isnumeric():
+        raise Exception("First character after letter wasn't a valid index")
+
+    while arg.isnumeric() and i + 1 < len(input_list):
+        new_dict[letter].append(arg)
+        i += 1
+        arg = input_list[i]
+
+def has_locked_duplicates(locked_dict):
+        all_indices = set()
+        count = 0
+        for letter, indices in locked_dict.items():
+            count += len(indices)
+            mini_set = set(indices)
+            all_indices = all_indices.union(mini_set)
+        if len(all_indices) != count:
+            raise Exception("No repeated indices for green/locked letters")
 
 def foldl(func, init, seq):
     if not seq:
