@@ -9,8 +9,7 @@ def main():
     user_input = input("guess details > ").lower().split()
     args = parseArguments(user_input)
     while not args.found:
-        locked_dict = parse_guess_details(args.locked)
-        loose_dict = parse_guess_details(args.loose)
+        locked_dict, loose_dict = initialize_guess(args)
         guess_set = generate_guesses(locked_dict, loose_dict, letter_to_words_dicts, answers_set)
         print("possible guesses: " + str(guess_set))
         user_input = input("guess details > ").lower().split()
@@ -20,7 +19,7 @@ def parseArguments(input):
     parser = argparse.ArgumentParser()
     parser.add_argument("-g", "--locked", nargs='+', help="")
     parser.add_argument("-y", "--loose",  nargs='+', help="")
-    parser.add_argument("-f", "--found",  default=None, help="") 
+    parser.add_argument("-f", "--found",  action='store_true', help="") 
     args = parser.parse_args(input)
     return args
 
@@ -33,6 +32,14 @@ def unpickle_files(dict_path, answers_path):
     answers_pickle = open(answers_path, "rb")
     answers_set = pickle.load(answers_pickle)
     return letter_to_words_dicts, answers_set
+
+def initialize_guess(args):
+    locked_dict = parse_guess_details(args.locked)
+    no_locked_duplicates(locked_dict)
+    loose_dict = parse_guess_details(args.loose)
+    invert_loose_indices(loose_dict)
+    return locked_dict, loose_dict
+
 
 def parse_guess_details(input_list):
     """ Takes in dictionary to populate w/ parsed input, user input, 
@@ -73,15 +80,23 @@ def parse_letter(i, input_list, new_dict):
 
     return i
 
-def has_locked_duplicates(locked_dict):
-        all_indices = set()
-        count = 0
-        for letter, indices in locked_dict.items():
-            count += len(indices)
-            mini_set = set(indices)
-            all_indices = all_indices.union(mini_set)
-        if len(all_indices) != count:
-            raise Exception("No repeated indices for green/locked letters")
+def no_locked_duplicates(locked_dict):
+    all_indices = set()
+    count = 0
+    for letter, indices in locked_dict.items():
+        count += len(indices)
+        mini_set = set(indices)
+        all_indices = all_indices.union(mini_set)
+    if len(all_indices) != count:
+        raise Exception("No repeated indices for green/locked letters")
+
+def invert_loose_indices(loose_dict):
+    valid_indices = list(range(WORD_LEN))
+    for k, value in loose_dict.items():
+        key_indices = valid_indices.copy()
+        for index in value:
+            key_indices.remove(index)
+        loose_dict[k] = key_indices
 
 def foldl(func, init, seq):
     if not seq:
@@ -123,6 +138,7 @@ def list_from_locked_letters(locked_dict, letter_to_words_dicts):
     for letter, indices in locked_dict.items():
         for index in indices:
             try:
+                print(str(index) + " typeof: " + type(index))
                 letter_to_words_dict = letter_to_words_dicts[index] 
                 locked_list.append(letter_to_words_dict[letter])
             except: 
