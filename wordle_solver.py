@@ -10,6 +10,8 @@ def main():
     args = parseArguments(user_input)
     while not args.found:
         locked_dict, loose_dict = initialize_guess(args)
+        print(locked_dict)
+        print(loose_dict)
         guess_set = generate_guesses(locked_dict, loose_dict, letter_to_words_dicts, answers_set)
         print("possible guesses: " + str(guess_set))
         user_input = input("guess details > ").lower().split()
@@ -75,7 +77,7 @@ def parse_letter(i, input_list, new_dict):
 
     while arg.isnumeric() and i < len(input_list):
         arg = input_list[i]
-        new_dict[letter].append(arg)
+        new_dict[letter].append(int(arg) - 1)
         i += 1
 
     return i
@@ -113,6 +115,7 @@ def generate_guesses(locked_dict, loose_dict, letter_to_words_dicts, answers_set
     :return suggestions : set(words) - set of words which are viable guesses
     """
     locked_list = list_from_locked_letters(locked_dict, letter_to_words_dicts)
+    print(locked_list)
     if len(locked_list) > 0:
         locked_set = foldl(lambda x, y: x.intersection(y), locked_list[0], locked_list)
     else: 
@@ -138,7 +141,6 @@ def list_from_locked_letters(locked_dict, letter_to_words_dicts):
     for letter, indices in locked_dict.items():
         for index in indices:
             try:
-                print(str(index) + " typeof: " + type(index))
                 letter_to_words_dict = letter_to_words_dicts[index] 
                 locked_list.append(letter_to_words_dict[letter])
             except: 
