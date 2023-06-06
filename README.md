@@ -1,5 +1,7 @@
 Generates possible guesses for the wordle!
 
+*Currently throws an infinite loop! Debugging in progress*
+
 Example:
 
 ![alt text](example_guess.png?raw=true)
