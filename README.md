@@ -1,6 +1,6 @@
 Generates possible guesses for the wordle!
 
-*Currently throws an infinite loop! Debugging in progress*
+*Currently gives all the words that absolutely don't work... debugging in progress*
 
 Example:
 

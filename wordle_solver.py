@@ -40,6 +40,7 @@ def parse_guess_details(input_list):
         returns next unparsed input index or if error, -1.
     """
     new_dict = {}
+    if not input_list: return new_dict
     for char in input_list:
         if not char.isnumeric() and not char.isalpha():
             raise Exception("All arguments must be letters or numbers.")
@@ -49,7 +50,7 @@ def parse_guess_details(input_list):
 
     i = 0
     while i < len(input_list):
-        parse_letter(i, input_list, new_dict)
+        i = parse_letter(i, input_list, new_dict)
 
     return new_dict
 
@@ -65,10 +66,12 @@ def parse_letter(i, input_list, new_dict):
     if not arg.isnumeric():
         raise Exception("First character after letter wasn't a valid index")
 
-    while arg.isnumeric() and i + 1 < len(input_list):
+    while arg.isnumeric() and i < len(input_list):
+        arg = input_list[i]
         new_dict[letter].append(arg)
         i += 1
-        arg = input_list[i]
+
+    return i
 
 def has_locked_duplicates(locked_dict):
         all_indices = set()
