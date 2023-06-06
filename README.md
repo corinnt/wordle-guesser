@@ -15,6 +15,6 @@ This will return all viable guesses containing *o* at position 2, a *u* at posit
 
 	possible guesses: {'tough', 'route', 'pouty', 'mouth', 'youth', 'south', 'touch'}
 
-Enter 'found' to quit.
+Enter `-f` or `--found` to quit.
 
 Happy wordling!
